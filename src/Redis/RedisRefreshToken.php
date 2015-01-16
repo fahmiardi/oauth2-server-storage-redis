@@ -49,13 +49,15 @@ class RedisRefreshToken extends AbstractStorage implements RefreshTokenInterface
         $this->cache[$key] = $payload;
         RedisCapsule::set($key, RedisUtil::prepare($payload));
 
+        $key = RedisUtil::prefix(null, 'oauth_refresh_tokens');
+
         if (! isset($this->cache[$key])) {
             $this->cache[$key] = [];
         }
 
         array_push($this->cache[$key], $token);
 
-        RedisCapsule::sadd(null, RedisUtil::prepare($token));
+        RedisCapsule::sadd($key, RedisUtil::prepare($token));
     }
 
     /**
