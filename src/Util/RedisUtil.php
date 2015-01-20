@@ -7,7 +7,20 @@ class RedisUtil
     /**
      * {@inheritdoc}
      */
-	public function prefix($key, $table)
+    protected static $instance;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function instance()
+    {
+        static::$instance = $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function prefix($key, $table)
     {
         $table = str_replace('_', ':', $table);
 
@@ -31,7 +44,7 @@ class RedisUtil
      */
     public function map($value)
     {
-    	return array_map(function ($item) {
+        return array_map(function ($item) {
             if (is_string($item) && $decoded = json_decode($item, true)) {
                 return $decoded;
             }
