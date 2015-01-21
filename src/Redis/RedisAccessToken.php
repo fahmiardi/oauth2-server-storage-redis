@@ -16,7 +16,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function get($token)
     {
-        $key = RedisUtil::instance()->prefix($token, 'oauth_access_tokens');
+        $key = RedisUtil::prefix($token, 'oauth_access_tokens');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -26,7 +26,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         return (new AccessTokenEntity($this->server))
@@ -39,18 +39,18 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function getScopes(AccessTokenEntity $token)
     {
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_access_token_scopes');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_access_token_scopes');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
         } else {
-            $result = $this->cache[$key] = RedisUtil::instance()->map(RedisCapsule::smembers($key));
+            $result = $this->cache[$key] = RedisUtil::map(RedisCapsule::smembers($key));
         }
 
         $response = [];
 
         foreach ($result as $row) {
-            $key = RedisUtil::instance()->prefix($row['id'], 'oauth_scopes');
+            $key = RedisUtil::prefix($row['id'], 'oauth_scopes');
 
             if (isset($this->cache[$key])) {
                 $scope = $this->cache[$key];
@@ -59,7 +59,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
                     continue;
                 }
 
-                $scope = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+                $scope = $this->cache[$key] = RedisUtil::unserialize($value);
             }
 
             $response[] = (new ScopeEntity($this->server))->hydrate([
@@ -82,11 +82,11 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
             'session_id'  => $sessionId
         ];
 
-        $key = RedisUtil::instance()->prefix($token, 'oauth_access_tokens');
+        $key = RedisUtil::prefix($token, 'oauth_access_tokens');
         $this->cache[$key] = $payload;
-        RedisCapsule::set($key, RedisUtil::instance()->prepare($payload));
+        RedisCapsule::set($key, RedisUtil::prepare($payload));
 
-        $key = RedisUtil::instance()->prefix(null, 'oauth_access_tokens');
+        $key = RedisUtil::prefix(null, 'oauth_access_tokens');
 
         if (! isset($this->cache[$key])) {
             $this->cache[$key] = [];
@@ -94,7 +94,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
 
         array_push($this->cache[$key], $token);
 
-        RedisCapsule::sadd($key, RedisUtil::instance()->prepare($token));
+        RedisCapsule::sadd($key, RedisUtil::prepare($token));
     }
 
     /**
@@ -102,7 +102,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
      */
     public function associateScope(AccessTokenEntity $token, ScopeEntity $scope)
     {
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_access_token_scopes');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_access_token_scopes');
 
         if (! isset($this->cache[$key])) {
             $this->cache[$key] = [];
@@ -112,7 +112,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
 
         array_push($this->cache[$key], $value);
 
-        RedisCapsule::sadd($key, RedisUtil::instance()->prepare($value));
+        RedisCapsule::sadd($key, RedisUtil::prepare($value));
     }
 
     /**
@@ -121,7 +121,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
     public function delete(AccessTokenEntity $token)
     {
         // Deletes the access token entry.
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_access_tokens');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_access_tokens');
 
         if (isset($this->cache[$key])) {
             unset($this->cache[$key]);
@@ -130,7 +130,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
         RedisCapsule::del($key);
 
         // Deletes the access token entry from the access tokens set.
-        $key = RedisUtil::instance()->prefix(null, 'oauth_access_tokens');
+        $key = RedisUtil::prefix(null, 'oauth_access_tokens');
 
         if (isset($this->cache[$key]) && ($cacheKey = array_search($token->getId(), $this->cache[$key])) !== false) {
             unset($this->cache[$key][$cacheKey]);
@@ -139,7 +139,7 @@ class RedisAccessToken extends AbstractStorage implements AccessTokenInterface
         RedisCapsule::srem($key, $token->getId());
 
         // Deletes the access tokens associated scopes.
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_access_token_scopes');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_access_token_scopes');
 
         if (isset($this->cache[$key])) {
             unset($this->cache[$key]);
