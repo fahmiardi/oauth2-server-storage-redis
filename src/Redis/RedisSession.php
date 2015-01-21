@@ -18,7 +18,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
      */
     private function getSession($sessionId)
     {
-        $key = RedisUtil::instance()->prefix($sessionId, 'oauth_sessions');
+        $key = RedisUtil::prefix($sessionId, 'oauth_sessions');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -28,7 +28,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         return (new SessionEntity($this->server))
@@ -41,7 +41,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
      */
     public function getByAccessToken(AccessTokenEntity $accessToken)
     {
-        $key = RedisUtil::instance()->prefix($accessToken->getId(), 'oauth_access_tokens');
+        $key = RedisUtil::prefix($accessToken->getId(), 'oauth_access_tokens');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -51,7 +51,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         return $this->getSession($result['session_id']);
@@ -62,7 +62,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
      */
     public function getByAuthCode(AuthCodeEntity $authCode)
     {
-        $key = RedisUtil::instance()->prefix($authCode->getId(), 'oauth_auth_codes');
+        $key = RedisUtil::prefix($authCode->getId(), 'oauth_auth_codes');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -72,7 +72,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         return $this->getSession($result['session_id']);
@@ -83,18 +83,18 @@ class RedisSession extends AbstractStorage implements SessionInterface
      */
     public function getScopes(SessionEntity $session)
     {
-        $key = RedisUtil::instance()->prefix($session->getId(), 'oauth_session_scopes');
+        $key = RedisUtil::prefix($session->getId(), 'oauth_session_scopes');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
         } else {
-            $result = $this->cache[$key] = RedisUtil::instance()->map(RedisCapsule::smembers($key));
+            $result = $this->cache[$key] = RedisUtil::map(RedisCapsule::smembers($key));
         }
 
         $response = [];
 
         foreach ($result as $row) {
-            $key = RedisUtil::instance()->prefix($row['id'], 'oauth_scopes');
+            $key = RedisUtil::prefix($row['id'], 'oauth_scopes');
 
             if (isset($this->cache[$key])) {
                 $scope = $this->cache[$key];
@@ -103,7 +103,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
                     continue;
                 }
 
-                $scope = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+                $scope = $this->cache[$key] = RedisUtil::unserialize($value);
             }
 
             $response[] = (new ScopeEntity($this->server))->hydrate([
@@ -120,9 +120,9 @@ class RedisSession extends AbstractStorage implements SessionInterface
      */
     public function create($ownerType, $ownerId, $clientId, $clientRedirectUri = null)
     {
-        $key = RedisUtil::instance()->prefix(null, 'oauth_session_ids');
+        $key = RedisUtil::prefix(null, 'oauth_session_ids');
         $sessionId = RedisCapsule::incr($key);
-        $key = RedisUtil::instance()->prefix($sessionId, 'oauth_sessions');
+        $key = RedisUtil::prefix($sessionId, 'oauth_sessions');
         $value = [
             'id'         => $sessionId,
             'client_id'  => $clientId,
@@ -131,7 +131,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
         ];
         $this->cache[$key] = $value;
 
-        RedisCapsule::set($key, RedisUtil::instance()->prepare($value));
+        RedisCapsule::set($key, RedisUtil::prepare($value));
 
         return $sessionId;
     }
@@ -141,7 +141,7 @@ class RedisSession extends AbstractStorage implements SessionInterface
      */
     public function associateScope(SessionEntity $session, ScopeEntity $scope)
     {
-        $key = RedisUtil::instance()->prefix($session->getId(), 'oauth_session_scopes');
+        $key = RedisUtil::prefix($session->getId(), 'oauth_session_scopes');
 
         if (! isset($this->cache[$key])) {
             $this->cache[$key] = [];
@@ -151,6 +151,6 @@ class RedisSession extends AbstractStorage implements SessionInterface
 
         array_push($this->cache[$key], $value);
 
-        RedisCapsule::sadd($key, RedisUtil::instance()->prepare($value));
+        RedisCapsule::sadd($key, RedisUtil::prepare($value));
     }
 }

@@ -16,7 +16,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
      */
     public function get($code)
     {
-        $key = RedisUtil::instance()->prefix($code, 'oauth_auth_codes');
+        $key = RedisUtil::prefix($code, 'oauth_auth_codes');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -26,7 +26,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         if ($result['expire_time'] >= time()) {
@@ -51,11 +51,11 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
             'client_redirect_uri'   => $redirectUri
         ];
 
-        $key = RedisUtil::instance()->prefix($token, 'oauth_auth_codes');
+        $key = RedisUtil::prefix($token, 'oauth_auth_codes');
         $this->cache[$key] = $payload;
-        RedisCapsule::set($key, RedisUtil::instance()->prepare($payload));
+        RedisCapsule::set($key, RedisUtil::prepare($payload));
 
-        $key = RedisUtil::instance()->prefix(null, 'oauth_auth_codes');
+        $key = RedisUtil::prefix(null, 'oauth_auth_codes');
 
         if (! isset($this->cache[$key])) {
             $this->cache[$key] = [];
@@ -63,7 +63,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
 
         array_push($this->cache[$key], $token);
 
-        RedisCapsule::sadd($key, RedisUtil::instance()->prepare($token));
+        RedisCapsule::sadd($key, RedisUtil::prepare($token));
     }
 
     /**
@@ -71,18 +71,18 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
      */
     public function getScopes(AuthCodeEntity $token)
     {
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_auth_code_scopes');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_auth_code_scopes');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
         } else {
-            $result = $this->cache[$key] = RedisUtil::instance()->map(RedisCapsule::smembers($key));
+            $result = $this->cache[$key] = RedisUtil::map(RedisCapsule::smembers($key));
         }
 
         $response = [];
 
         foreach ($result as $row) {
-            $key = RedisUtil::instance()->prefix($row['id'], 'oauth_scopes');
+            $key = RedisUtil::prefix($row['id'], 'oauth_scopes');
 
             if (isset($this->cache[$key])) {
                 $scope = $this->cache[$key];
@@ -91,7 +91,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
                     continue;
                 }
 
-                $scope = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+                $scope = $this->cache[$key] = RedisUtil::unserialize($value);
             }
 
             $response[] = (new ScopeEntity($this->server))->hydrate([
@@ -108,7 +108,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
      */
     public function associateScope(AuthCodeEntity $token, ScopeEntity $scope)
     {
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_auth_code_scopes');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_auth_code_scopes');
 
         if (! isset($this->cache[$key])) {
             $this->cache[$key] = [];
@@ -118,7 +118,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
 
         array_push($this->cache[$key], $value);
 
-        RedisCapsule::sadd($key, RedisUtil::instance()->prepare($value));
+        RedisCapsule::sadd($key, RedisUtil::prepare($value));
     }
 
     /**
@@ -127,7 +127,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
     public function delete(AuthCodeEntity $token)
     {
         // // Deletes the authorization code entry.
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_auth_codes');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_auth_codes');
 
         if (isset($this->cache[$key])) {
             unset($this->cache[$key]);
@@ -136,7 +136,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
         RedisCapsule::del($key);
 
         // // Deletes the authorization code entry from the authorization codes set.
-        $key = RedisUtil::instance()->prefix(null, 'oauth_auth_codes');
+        $key = RedisUtil::prefix(null, 'oauth_auth_codes');
 
         if (isset($this->cache[$key]) && ($cacheKey = array_search($token->getId(), $this->cache[$key])) !== false) {
             unset($this->cache[$key][$cacheKey]);
@@ -145,7 +145,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
         RedisCapsule::srem($key, $token->getId());
 
         // // Deletes the authorization codes associated scopes.
-        $key = RedisUtil::instance()->prefix($token->getId(), 'oauth_auth_code_scopes');
+        $key = RedisUtil::prefix($token->getId(), 'oauth_auth_code_scopes');
 
         if (isset($this->cache[$key])) {
             unset($this->cache[$key]);

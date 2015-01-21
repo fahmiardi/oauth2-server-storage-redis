@@ -15,7 +15,7 @@ class RedisScope extends AbstractStorage implements ScopeInterface
      */
     public function get($scope, $grantType = null, $clientId = null)
     {
-        $key = RedisUtil::instance()->prefix($scope, 'oauth_scopes');
+        $key = RedisUtil::prefix($scope, 'oauth_scopes');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -25,7 +25,7 @@ class RedisScope extends AbstractStorage implements ScopeInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         return (new ScopeEntity($this->server))->hydrate([

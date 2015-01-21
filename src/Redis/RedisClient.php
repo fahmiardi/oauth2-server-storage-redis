@@ -16,7 +16,7 @@ class RedisClient extends AbstractStorage implements ClientInterface
      */
     public function get($clientId, $clientSecret = null, $redirectUri = null, $grantType = null)
     {
-        $key = RedisUtil::instance()->prefix($clientId, 'oauth_clients');
+        $key = RedisUtil::prefix($clientId, 'oauth_clients');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -26,7 +26,7 @@ class RedisClient extends AbstractStorage implements ClientInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         // If a secret and redirection URI were given then we must correctly
@@ -65,7 +65,7 @@ class RedisClient extends AbstractStorage implements ClientInterface
      */
     public function getBySession(SessionEntity $session)
     {
-        $key = RedisUtil::instance()->prefix($session->getId(), 'oauth_sessions');
+        $key = RedisUtil::prefix($session->getId(), 'oauth_sessions');
 
         if (isset($this->cache[$key])) {
             $result = $this->cache[$key];
@@ -75,7 +75,7 @@ class RedisClient extends AbstractStorage implements ClientInterface
                 return;
             }
 
-            $result = $this->cache[$key] = RedisUtil::instance()->unserialize($value);
+            $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
         return $this->get($result['client_id']);
