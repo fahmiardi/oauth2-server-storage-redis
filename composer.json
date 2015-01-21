@@ -17,10 +17,5 @@
         "psr-4": {
             "Fahmiardi\\OAuth2\\Server\\Storage\\": "./src/"
         }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "0.1-dev"
-        }
     }
 }
