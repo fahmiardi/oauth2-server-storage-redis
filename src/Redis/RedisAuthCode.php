@@ -29,7 +29,7 @@ class RedisAuthCode extends AbstractStorage implements AuthCodeInterface
             $result = $this->cache[$key] = RedisUtil::unserialize($value);
         }
 
-        if ($result['expire_time'] >= time()) {
+        if ($result['expire_time'] < time()) {
             return;
         }
 
